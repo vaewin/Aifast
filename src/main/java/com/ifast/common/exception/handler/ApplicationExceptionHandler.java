@@ -97,7 +97,8 @@ public class ApplicationExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Object handleException(Exception e) {
-        log.error("全局异常处理:Exception[{}]:{}", e.getClass(), e.getMessage());
+        log.info("全局异常处理:Exception[{}]:{}", e.getClass(), e.getMessage());
+        e.printStackTrace();
         if (!HttpContextUtils.isAjax()) {
             ModelAndView mv = new ModelAndView();
             mv.setViewName(ERROR_DEFAULT_PAGE);

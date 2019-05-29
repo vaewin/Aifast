@@ -287,6 +287,9 @@ $(function(){
 		}
     });
 
-
+	var top = window.top;
+	if(top !== window){
+		window.top.location.href = window.location.href;
+	}
 
 });

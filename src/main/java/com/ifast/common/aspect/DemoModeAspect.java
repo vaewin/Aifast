@@ -51,9 +51,8 @@ public class DemoModeAspect {
                 String[] value = rp.value();
                 List<String> asList = Arrays.asList(value);
                 String string = asList.toString();
-                if (!HttpContextUtils.getHttpServletRequest().getMethod().equalsIgnoreCase("GET")
-                        && (string.contains("remove") || string.contains("Remove") || string.contains("edit")
-                                || string.contains("update") || string.contains("delete"))) {
+                boolean isUpdateOpt = string.contains("remove") || string.contains("Remove") || string.contains("edit") || string.contains("update") || string.contains("delete");
+                if (!HttpContextUtils.getHttpServletRequest().getMethod().equalsIgnoreCase("GET") && isUpdateOpt) {
                     log.error("当前用户未演示账户无权操作！");
                     throw new IFastException(EnumErrorCode.notAuthorization.getCodeStr());
                 }
