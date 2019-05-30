@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * <pre>
  * </pre>
@@ -22,7 +24,7 @@ public class JWTConfigProperties {
     /**
      * jwt过期时间,默认2小时，单位为毫秒
      */
-    private Long expireTime = 7200000L;
+    private Long expireTime = TimeUnit.HOURS.toMillis(2);
     /**
      * <pre>
      *   refresh_token过期时间，默认7天，单位为毫秒
@@ -34,6 +36,6 @@ public class JWTConfigProperties {
      *      30 day:2592000000
      *  </pre>
      */
-    private Long refreshTokenExpire = 604800000L;
+    private Long refreshTokenExpire = TimeUnit.DAYS.toMillis(7);
 
 }
