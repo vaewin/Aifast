@@ -74,7 +74,9 @@ public class GenUtils {
         List<String> baseColumnNames = Arrays.asList("deleted", "version", "createAt", "createBy", "updateAt", "updateBy");
         for (Map<String, String> column : columns) {
         	columnNames.add(column.get("columnName"));
-        	if(baseColumnNames.contains(column.get("columnName"))) continue;
+        	if(baseColumnNames.contains(column.get("columnName"))) {
+        	    continue;
+            }
         	
             ColumnDO columnDO = new ColumnDO();
             columnDO.setColumnName(column.get("columnName"));
@@ -167,9 +169,9 @@ public class GenUtils {
      */
     public static String columnToJava(String columnName) {
         if(columnName.contains(STR_DELIMITER)){
-            return WordUtils.capitalizeFully(columnName, new char[] { '_' }).replace(STR_DELIMITER, "");
+            return WordUtils.capitalize(columnName, new char[] { '_' }).replace(STR_DELIMITER, "");
         }else {
-            return WordUtils.uncapitalize(columnName);
+            return WordUtils.capitalize(columnName);
         }
     }
 
