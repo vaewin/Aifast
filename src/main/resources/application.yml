@@ -1,14 +1,14 @@
 banner:
   location: config/banner.txt
-  encoding: utf-8
 server:
   context-path: /
-  session-timeout: 1800
   tomcat:
     max-threads: 1000
     min-spare-threads: 30
+    uri-encoding: utf-8
   port: 8888
-  uri-encoding: utf-8
+  session:
+    timeout: 1800
 security:
   basic:
     enabled: false
@@ -27,7 +27,7 @@ spring:
     multipart:
       max-file-size: 30Mb
       max-request-size: 30Mb
-  redis:
+#  redis:
 #    host: 127.0.0.1
   devtools:
     restart:
