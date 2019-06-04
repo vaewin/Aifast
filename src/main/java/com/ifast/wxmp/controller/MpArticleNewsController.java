@@ -45,7 +45,7 @@ public class MpArticleNewsController extends BaseController {
     public Result<Page<MpArticleDO>> list(MpArticleDO mpArticleDTO, String appId) {
         Wrapper<MpArticleDO> wrapper = new EntityWrapper<>(mpArticleDTO).eq("mpId", mpConfigService.selectOne(MpConfigDO.builder().appId(appId).build()).getId()).orderBy("id", false);
         Page<MpArticleDO> page = mpArticleService.selectPage(getPage(MpArticleDO.class), wrapper);
-        return Result.ok(page);
+        return success(page);
     }
 
     @GetMapping("/add")
@@ -69,7 +69,7 @@ public class MpArticleNewsController extends BaseController {
     public Result<String> save(MpArticleDO mpArticle, String appId) {
         mpArticle.setMpId(mpConfigService.selectOne(MpConfigDO.builder().appId(appId).build()).getId());
         mpArticleService.insert(mpArticle);
-        return Result.ok();
+        return success();
     }
 
     @Log("修改")
@@ -78,7 +78,7 @@ public class MpArticleNewsController extends BaseController {
     @RequiresPermissions("wxmp:mpArticleNews:edit")
     public Result<String> update(MpArticleDO mpArticle) {
         boolean update = mpArticleService.updateById(mpArticle);
-        return update ? Result.ok() : Result.fail();
+        return update ? success() : Result.fail();
     }
 
     @Log("删除")
@@ -87,7 +87,7 @@ public class MpArticleNewsController extends BaseController {
     @RequiresPermissions("wxmp:mpArticleNews:remove")
     public Result<String> remove(Long id) {
         mpArticleService.deleteById(id);
-        return Result.ok();
+        return success();
     }
 
     @Log("批量删除")
@@ -96,7 +96,7 @@ public class MpArticleNewsController extends BaseController {
     @RequiresPermissions("wxmp:mpArticleNews:batchRemove")
     public Result<String> remove(@RequestParam("ids[]") Long[] ids) {
         mpArticleService.deleteBatchIds(Arrays.asList(ids));
-        return Result.ok();
+        return success();
     }
 
 }

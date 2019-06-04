@@ -95,4 +95,8 @@ public class Result<T> {
         this.data = data;
     }
 
+    @Override
+    public String toString() {
+        return JSONUtils.beanToJson(this);
+    }
 }

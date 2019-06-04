@@ -39,7 +39,7 @@ public class ConfigController extends BaseController {
     @RequiresPermissions("common:config:config")
     public Result<Page<ConfigDO>> list(ConfigDO configDTO) {
         Page<ConfigDO> page = configService.selectPage(getPage(ConfigDO.class), configService.convertToEntityWrapper("k", configDTO.getK()));
-        return Result.ok(page);
+        return success(page);
     }
     
     @GetMapping("/add")
@@ -65,7 +65,7 @@ public class ConfigController extends BaseController {
     @RequiresPermissions("common:config:add")
     public Result<String> save(ConfigDO config) {
         if (configService.insert(config)) {
-            return Result.ok();
+            return success();
         }
         return Result.fail();
     }
@@ -79,7 +79,7 @@ public class ConfigController extends BaseController {
     @RequiresPermissions("common:config:edit")
     public Result<String> update(ConfigDO config) {
         configService.updateById(config);
-        return Result.ok();
+        return success();
     }
 
     /**
@@ -91,7 +91,7 @@ public class ConfigController extends BaseController {
     @RequiresPermissions("common:config:remove")
     public Result<String> remove(Long id) {
         configService.deleteById(id);
-        return Result.ok();
+        return success();
     }
 
     /**
@@ -103,7 +103,7 @@ public class ConfigController extends BaseController {
     @RequiresPermissions("common:config:batchRemove")
     public Result<String> remove(@RequestParam("ids[]") Long[] ids) {
         configService.deleteBatchIds(Arrays.asList(ids));
-        return Result.ok();
+        return success();
     }
 
 }

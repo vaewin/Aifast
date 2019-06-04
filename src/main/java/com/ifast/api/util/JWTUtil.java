@@ -37,6 +37,9 @@ public class JWTUtil {
 
 	public static String userPrimaryKey = SpringContextHolder.getBean(JWTConfigProperties.class).getUserPrimaryKey();
 
+    public static String STR_DELIMITER = "\\.";
+    public static int LEVEL = 3;
+
 
     public static TokenVO createToken(UserDO user) {
         TokenVO vo = new TokenVO();

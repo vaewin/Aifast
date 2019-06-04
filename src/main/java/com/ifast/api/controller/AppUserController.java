@@ -48,7 +48,7 @@ public class AppUserController {
     @PostMapping("logout")
     @Log("api测试-注销token")
     @ApiOperation("api测试-注销token")
-    public Result<?> logout(@RequestBody UserLogoutDTO dto) {
+    public Result<String> logout(@RequestBody UserLogoutDTO dto) {
     	userService.logoutToken(dto.getToken(), dto.getRefreshToken());
     	return Result.ok();
     }
@@ -58,7 +58,7 @@ public class AppUserController {
     @Log("api测试-需要认证才能访问")
     @ApiOperation("api测试-需要认证才能访问")
     @ApiImplicitParams({ @ApiImplicitParam(name = "Authorization", value = "Authorization", paramType = "header") })
-    public Result<?> requireAuth() {
+    public Result<String> requireAuth() {
         return Result.build(200, "认证通过", null);
     }
 
@@ -67,7 +67,7 @@ public class AppUserController {
     @Log("api测试-需要api角色才能访问")
     @ApiOperation("api测试-需要api角色才能访问")
     @ApiImplicitParams({ @ApiImplicitParam(name = "Authorization", value = "Authorization", paramType = "header") })
-    public Result<?> requireRole() {
+    public Result<String> requireRole() {
         return Result.build(200, "用户有role角色权限", null);
     }
 
@@ -76,7 +76,7 @@ public class AppUserController {
     @Log("api测试-需要api:user:update权限才能访问")
     @ApiOperation("api测试-需要api:user:update权限才能访问")
     @ApiImplicitParams({ @ApiImplicitParam(name = "Authorization", value = "Authorization", paramType = "header") })
-    public Result<?> requirePermission() {
+    public Result<String> requirePermission() {
         return Result.build(200, "用户有api:user:update权限", null);
     }
 

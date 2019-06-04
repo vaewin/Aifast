@@ -39,7 +39,7 @@ public class LogController extends BaseController {
     	wrapper.eq(logDTO.getUserId()!=null, "userId", logDTO.getUserId());
     	wrapper.like("operation", logDTO.getOperation());
         Page<LogDO> page = logService.selectPage(getPage(LogDO.class), wrapper);
-        return Result.ok(page);
+        return success(page);
     }
     
     @Log("删除系统日志")
@@ -47,7 +47,7 @@ public class LogController extends BaseController {
     @PostMapping("/remove")
     Result<String> remove(Long id) {
         logService.deleteById(id);
-        return Result.ok();
+        return success();
     }
     
     @Log("批量删除系统日志")

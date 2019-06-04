@@ -10,16 +10,16 @@ import java.util.UUID;
  */
 public abstract class UUIDUtils {
 
-    public static String get() {
-        return get(true);
-    }
-
     public static String get(boolean isPureStr) {
         String sesult = UUID.randomUUID().toString();
         if (isPureStr) {
             sesult = sesult.replaceAll("-", "");
         }
         return sesult;
+    }
+
+    public static String get() {
+        return get(true);
     }
 
 }

@@ -4,10 +4,9 @@ import com.ifast.common.component.oss.support.UploadServer;
 import com.ifast.common.exception.IFastException;
 import com.ifast.common.type.EnumErrorCode;
 import com.qiniu.common.QiniuException;
-import com.qiniu.common.Zone;
+import com.qiniu.common.Region;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.UploadManager;
-import com.qiniu.util.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,19 +24,19 @@ public class QiNiuUploadServer implements UploadServer {
     private UploadManager uploadManager;
     private Configuration cfg;
     private QiNiuOSSProperties config;
+    private QiNiuTokenInMemory qiNiuToken;
 
 
-    public QiNiuUploadServer(QiNiuOSSProperties config, Zone zone) {
+    public QiNiuUploadServer(QiNiuOSSProperties config, Region zone, QiNiuTokenInMemory qiNiuToken) {
         cfg = new Configuration(zone);
         uploadManager = new UploadManager(cfg);
         this.config = config;
+        this.qiNiuToken = qiNiuToken;
     }
 
-    // method
     @Override
     public String upload(byte[] bytes, String fileName) {
-        String token = Auth.create(this.config.getAccessKey(), this.config.getSecretKey())
-                .uploadToken(this.config.getBucket());
+        String token = qiNiuToken.get();
         try {
             uploadManager.put(bytes, fileName, token);
             String fileURL = this.config.getAccessURL() + fileName;

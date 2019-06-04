@@ -41,7 +41,7 @@ public class DictController extends BaseController {
     @RequiresPermissions("common:sysDict:sysDict")
     public Result<Page<DictDO>> list(DictDO dictDTO) {
         Page<DictDO> page = sysDictService.selectPage(getPage(DictDO.class), sysDictService.convertToEntityWrapper("name", dictDTO.getName(), "type", dictDTO.getType()));
-        return Result.ok(page);
+        return success(page);
     }
     
     @GetMapping("/add")
@@ -67,7 +67,7 @@ public class DictController extends BaseController {
     @RequiresPermissions("common:sysDict:add")
     public Result<String> save(DictDO sysDict) {
         sysDictService.insert(sysDict);
-        return Result.ok();
+        return success();
     }
 
     /**
@@ -79,7 +79,7 @@ public class DictController extends BaseController {
     @RequiresPermissions("common:sysDict:edit")
     public Result<String> update(DictDO sysDict) {
         sysDictService.updateById(sysDict);
-        return Result.ok();
+        return success();
     }
 
     /**
@@ -91,7 +91,7 @@ public class DictController extends BaseController {
     @RequiresPermissions("common:sysDict:remove")
     public Result<String> remove(Long id) {
         sysDictService.deleteById(id);
-        return Result.ok();
+        return success();
     }
 
     /**
@@ -103,7 +103,7 @@ public class DictController extends BaseController {
     @RequiresPermissions("common:sysDict:batchRemove")
     public Result<String> remove(@RequestParam("ids[]") Long[] ids) {
         sysDictService.deleteBatchIds(Arrays.asList(ids));
-        return Result.ok();
+        return success();
     }
     
     @GetMapping("/type")

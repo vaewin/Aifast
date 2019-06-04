@@ -6,8 +6,9 @@ import com.ifast.common.component.oss.support.aliyun.AliyunUploadServer;
 import com.ifast.common.component.oss.support.local.LocalUploadProperties;
 import com.ifast.common.component.oss.support.local.LocalUploadServer;
 import com.ifast.common.component.oss.support.qiniu.QiNiuOSSProperties;
+import com.ifast.common.component.oss.support.qiniu.QiNiuTokenInMemory;
 import com.ifast.common.component.oss.support.qiniu.QiNiuUploadServer;
-import com.qiniu.common.Zone;
+import com.qiniu.common.Region;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,11 +45,11 @@ public class OSSConfiguration {
     @Bean
     @ConditionalOnProperty(prefix="ifast.oss.qiniu", name="accessKey")
     @ConditionalOnMissingBean(UploadServer.class)
-    public UploadServer qiNiuUploadServer(QiNiuOSSProperties ossConfig) {
+    public UploadServer qiNiuUploadServer(QiNiuOSSProperties ossConfig, QiNiuTokenInMemory qiNiuToken) {
         if(log.isDebugEnabled()){
             log.debug("启用七牛云上传服务");
         }
-        return new QiNiuUploadServer(ossConfig, Zone.zone2());
+        return new QiNiuUploadServer(ossConfig, Region.region2(),qiNiuToken);
     }
 
     /**

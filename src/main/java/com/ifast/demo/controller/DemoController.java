@@ -41,7 +41,7 @@ public class DemoController extends BaseController {
 	@ResponseBody
 	@GetMapping("/{id}")
 	public Result<DemoDO> list(@PathVariable Long id){
-        return Result.ok(demoBaseService.selectById(id));
+        return success(demoBaseService.selectById(id));
 	}
 	
 	@ResponseBody
@@ -52,7 +52,7 @@ public class DemoController extends BaseController {
         wrapper.like("title", demoBaseDTO.getTitle());
         wrapper.like("content", demoBaseDTO.getContent());
         Page<DemoDO> page = demoBaseService.selectPage(getPage(DemoDO.class), wrapper);
-        return Result.ok(page);
+        return success(page);
 	}
 
 	@GetMapping("/add")
@@ -78,7 +78,7 @@ public class DemoController extends BaseController {
 	@RequiresPermissions("demo:demoBase:add")
 	public Result<String> save( DemoDO demoBase){
 		boolean insert = demoBaseService.insert(demoBase);
-        return insert ? Result.ok() : Result.fail();
+        return insert ? success() : Result.fail();
 	}
 	/**
 	 * 修改
@@ -89,7 +89,7 @@ public class DemoController extends BaseController {
 	@RequiresPermissions("demo:demoBase:edit")
 	public Result<String>  update( DemoDO demoBase){
 		boolean updateById = demoBaseService.updateById(demoBase);
-		return updateById ? Result.ok() : Result.fail();
+		return updateById ? success() : Result.fail();
 	}
 	
 	/**
@@ -101,7 +101,7 @@ public class DemoController extends BaseController {
 	@RequiresPermissions("demo:demoBase:remove")
 	public Result<String>  remove( Long id){
 		demoBaseService.deleteById(id);
-        return Result.ok();
+        return success();
 	}
 	
 	/**
@@ -113,7 +113,7 @@ public class DemoController extends BaseController {
 	@RequiresPermissions("demo:demoBase:batchRemove")
 	public Result<String>  remove(@RequestParam("ids[]") Long[] ids){
 		demoBaseService.deleteBatchIds(Arrays.asList(ids));
-		return Result.ok();
+		return success();
 	}
 
 
