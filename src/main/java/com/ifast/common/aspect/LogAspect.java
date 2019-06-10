@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
@@ -74,13 +73,13 @@ public class LogAspect {
         if(isLogPretty){
             log.info("User request info  ---- {} ---- S", DateUtils.format(new Date(),DateUtils.DATE_TIME_PATTERN_19));
             log.info("请求接口: {} {}@{} {} {}.{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName());
-            log.info("请求参数:{}", Arrays.toString(point.getArgs()));
+            log.info("请求参数:{}", JSONUtils.beanToJson(point.getArgs()));
             log.info("请求耗时:{} ms", time);
             log.info("请求用户:{} ", ShiroUtils.getUserId());
             log.info("请求结果:{}", JSONUtils.beanToJson(result));
             log.info("------------------------------------------------ E", DateUtils.format(new Date(),DateUtils.DATE_TIME_PATTERN_19));
         } else {
-            log.info("【请求】：{} {}@{} {} {}.{}{} (耗时 {} ms) 【返回】：{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), Arrays.toString(point.getArgs()), time, JSONUtils.beanToJson(result));
+            log.info("【请求】：{} {}@{} {} {}.{}{} (耗时 {} ms) 【返回】：{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), JSONUtils.beanToJson(point.getArgs()), time, JSONUtils.beanToJson(result));
         }
     }
 
