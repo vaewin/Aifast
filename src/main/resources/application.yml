@@ -31,7 +31,7 @@ spring:
 #    host: 127.0.0.1
   devtools:
     restart:
-      enabled: true
+      enabled: false
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*Mapper.xml
   typeAliasesPackage: com.ifast.**.domain
@@ -43,6 +43,7 @@ mybatis-plus:
     sql-injector: com.baomidou.mybatisplus.mapper.LogicSqlInjector
     logic-not-delete-value: 0
     logic-delete-value: 1
+    meta-object-handler: com.ifast.common.mp.MpMetaObjectHandler
   configuration:
     map-underscore-to-camel-case: false
     cache-enabled: false
