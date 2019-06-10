@@ -1,13 +1,10 @@
 package com.ifast.common.aspect;
 
 import com.ifast.common.annotation.Log;
-import com.ifast.common.base.BaseDO;
+import com.ifast.common.config.IFastProperties;
 import com.ifast.common.dao.LogDao;
 import com.ifast.common.domain.LogDO;
-import com.ifast.common.utils.HttpContextUtils;
-import com.ifast.common.utils.IPUtils;
-import com.ifast.common.utils.JSONUtils;
-import com.ifast.common.utils.ShiroUtils;
+import com.ifast.common.utils.*;
 import com.ifast.sys.domain.UserDO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,11 +15,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
@@ -41,98 +35,53 @@ import java.util.Map;
 @AllArgsConstructor
 public class LogAspect {
 
-    private LogDao logMapper;
+    private final LogDao logMapper;
+    private final IFastProperties iFastProperties;
 
-    @Pointcut("@annotation(com.ifast.common.annotation.Log)")
-    public void logPointCut() {
-    }
-
-    @Around("logPointCut()")
-    public Object around(ProceedingJoinPoint point) throws Throwable {
-        long beginTime = System.currentTimeMillis();
-        // 执行方法
-        Object result = point.proceed();
-        // 执行时长(毫秒)
-        long time = System.currentTimeMillis() - beginTime;
-        // 保存日志
-        saveLog(point, time);
-        return result;
-    }
-    
     @Pointcut("execution(public * com.ifast.*.controller.*.*(..))")
     public void logController(){}
     
-    /** 记录controller日志，包括请求、ip、参数、响应结果 */
+    /**
+     * 记录controller日志，包括请求、ip、参数、响应结果
+     */
     @Around("logController()")
-    public Object controller(ProceedingJoinPoint point) throws Throwable {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        log.info("{} {} {} {}.{}{}", request.getMethod(), request.getRequestURI(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), Arrays.toString(point.getArgs()));
-        
+    public Object controller(ProceedingJoinPoint point) {
+
         long beginTime = System.currentTimeMillis();
-        Object result = point.proceed();
+        Object result = null;
+        try {
+            result = point.proceed();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
         long time = System.currentTimeMillis() - beginTime;
-        
-        log.info("result({}) {}", time, JSONUtils.beanToJson(result));
+
+        print(point, result, time, iFastProperties.isLogPretty());
+        saveLog(point, time);
+
         return result;
     }
-    
-    @Pointcut("execution(public * com.ifast.*.service.*.*(..))")
-    public void logService(){}
-    
-    /** 记录自定义service接口日志，如果要记录CoreService所有接口日志请仿照logMapper切面 */
-    @Around("logService()")
-    public Object service(ProceedingJoinPoint point) throws Throwable {
-    	log.info("call {}.{}{}", point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), Arrays.toString(point.getArgs()));
-    	
-    	long beginTime = System.currentTimeMillis();
-    	Object result = point.proceed();
-    	long time = System.currentTimeMillis() - beginTime;
-    	
-    	log.info("result({}) {}", time, result instanceof Serializable ? JSONUtils.beanToJson(result) : result);
-    	return result;
-    }
-    
-    @Pointcut("within(com.baomidou.mybatisplus.mapper.BaseMapper+)")
-    public void logMapper(){}
-    
-    /** 记录mapper所有接口日志，设置createBy和updateBy基础字段，logback会记录sql，这里记录查库返回对象 */
-    @Around("logMapper()")
-    public Object mapper(ProceedingJoinPoint point) throws Throwable {
-    	String methodName = point.getSignature().getName();
-    	boolean insertBy = isInsert(methodName);
-        boolean updateBy = isUpdate(methodName);
 
-    	if(insertBy || updateBy) {
-    		Object arg0 = point.getArgs()[0];
-    		if(arg0 instanceof BaseDO) {
-    			Long userId = ShiroUtils.getUserId();
-    			if(userId != null) {
-    				BaseDO baseDO = (BaseDO)arg0;
-    				if(insertBy) {
-    					baseDO.setCreateBy(userId);
-    				}else {
-    					baseDO.setUpdateBy(userId);
-    				}
-    			}
-    		}
-    	}
-    	
-    	log.info("call {}.{}{}", point.getTarget().getClass().getSimpleName(), methodName, Arrays.toString(point.getArgs()));
-    	long beginTime = System.currentTimeMillis();
-    	Object result = point.proceed();
-    	long time = System.currentTimeMillis() - beginTime;
-    	
-    	log.info("result({}) {}", time, JSONUtils.beanToJson(result));
-    	return result;
-    }
-
-    private boolean isUpdate(String methodName) {
-        return "update".equals(methodName) || "updateById".equals(methodName) || "updateAllColumn".equals(methodName);
-    }
-
-    private boolean isInsert(String methodName) {
-        return "insert".equals(methodName) || "insertAllColumn".equals(methodName);
+    /**
+     * 日志打印
+     * @param point
+     * @param result
+     * @param time
+     * @param isLogPretty
+     */
+    private void print(ProceedingJoinPoint point, Object result, long time, boolean isLogPretty) {
+        HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
+        if(isLogPretty){
+            log.info("User request info  ---- {} ---- S", DateUtils.format(new Date(),DateUtils.DATE_TIME_PATTERN_19));
+            log.info("请求接口: {} {}@{} {} {}.{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName());
+            log.info("请求参数:{}", Arrays.toString(point.getArgs()));
+            log.info("请求耗时:{} ms", time);
+            log.info("请求用户:{} ", ShiroUtils.getUserId());
+            log.info("请求结果:{}", JSONUtils.beanToJson(result));
+            log.info("------------------------------------------------ E", DateUtils.format(new Date(),DateUtils.DATE_TIME_PATTERN_19));
+        } else {
+            log.info("【请求】：{} {}@{} {} {}.{}{} (耗时 {} ms) 【返回】：{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), Arrays.toString(point.getArgs()), time, JSONUtils.beanToJson(result));
+        }
     }
 
     /**
@@ -155,7 +104,7 @@ public class LogAspect {
         // 请求的方法名
         String className = joinPoint.getTarget().getClass().getName();
         String methodName = signature.getName();
-        String params = null;
+        String params;
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
         if(request != null) {
         	sysLog.setMethod(request.getMethod()+" "+request.getRequestURI());

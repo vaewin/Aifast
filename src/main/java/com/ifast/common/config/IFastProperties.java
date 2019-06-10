@@ -37,4 +37,11 @@ public class IFastProperties {
      */
     private String tempDir;
 
+    /**
+     * Controller日志多行打印输出
+     * 日志量大时，不建议使用
+     * 开发时使用方便调试
+     */
+    public boolean isLogPretty = true;
+
 }
