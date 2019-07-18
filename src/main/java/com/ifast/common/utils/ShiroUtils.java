@@ -3,8 +3,10 @@ package com.ifast.common.utils;
 import com.ifast.api.service.AppUserService;
 import com.ifast.api.util.JWTUtil;
 import com.ifast.sys.domain.UserDO;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.springframework.beans.BeanUtils;
 
 public class ShiroUtils {
 
@@ -23,8 +25,15 @@ public class ShiroUtils {
 				return userDO;
 			}else if(principal instanceof UserDO) {
 				return (UserDO)principal;
+			}else if(StringUtils.equals(principal.getClass().toString(), UserDO.class.toString())) {
+				UserDO userDO = new UserDO();
+				BeanUtils.copyProperties(principal, userDO);
+				return userDO;
+
 			}
-		}catch (Exception ignore) { }
+		}catch (Exception ignore) {
+			ignore.printStackTrace();
+		}
 		return null;
 	}
 	
