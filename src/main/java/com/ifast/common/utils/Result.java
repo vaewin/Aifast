@@ -1,6 +1,9 @@
 package com.ifast.common.utils;
 
 import com.ifast.common.type.EnumErrorCode;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.Serializable;
 
 /**
  * <pre>
@@ -11,7 +14,8 @@ import com.ifast.common.type.EnumErrorCode;
  * @author Aron
  * @date 2017年5月9日
  */
-public class Result<T> {
+@Slf4j
+public class Result<T> implements Serializable {
 
     public final static Integer CODE_SUCCESS = EnumErrorCode.success.getCode();
     public final static Integer CODE_FAIL = EnumErrorCode.fail.getCode();
@@ -67,6 +71,16 @@ public class Result<T> {
 
     public static <T> Result<T> build(Integer status, String msg, T data) {
         return new Result<>(status, msg, data);
+    }
+
+    public static Result<String> buildByErrorCode(String errorCode) {
+        try {
+            int code = Integer.parseInt(errorCode);
+            return Result.build(code, EnumErrorCode.getMsgByCode(code));
+        } catch (NumberFormatException e1) {
+            log.warn("错误码使用错误，异常内容请抛出EnumErrorCode类的枚举值");
+            return Result.build(EnumErrorCode.unknowFail.getCode(), EnumErrorCode.unknowFail.getMsg());
+        }
     }
 
     // get set

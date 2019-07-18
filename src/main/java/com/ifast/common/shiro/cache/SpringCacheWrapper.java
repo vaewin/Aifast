@@ -1,11 +1,10 @@
 package com.ifast.common.shiro.cache;
 
+import lombok.extern.slf4j.Slf4j;
 import net.sf.ehcache.Ehcache;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.util.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.cache.support.SimpleValueWrapper;
 
 import java.util.*;
@@ -15,8 +14,8 @@ import java.util.*;
  *
  * </pre>
  */
+@Slf4j
 public class SpringCacheWrapper implements Cache {
-    private final static Logger log = LoggerFactory.getLogger(SpringCacheWrapper.class);
     private org.springframework.cache.Cache springCache;
     private boolean isEhcache;
     private Set<Object> keys;

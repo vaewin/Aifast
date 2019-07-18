@@ -20,6 +20,7 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.ExpiredCredentialsException;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,14 +29,19 @@ import java.util.Date;
  * <pre>
  * jwt工具类
  * </pre>
- * 
+ *
  * <small> 2018年4月28日 | Aron</small>
  */
 @Slf4j
 @Component
 public class JWTUtil {
 
-	public static String userPrimaryKey = SpringContextHolder.getBean(JWTConfigProperties.class).getUserPrimaryKey();
+    private static JWTConfigProperties jwtConfigProperties = null;
+
+    @PostConstruct
+    public void init() {
+        jwtConfigProperties = SpringContextHolder.getBean(JWTConfigProperties.class);
+    }
 
     public static String STR_DELIMITER = "\\.";
     public static int LEVEL = 3;
@@ -43,7 +49,7 @@ public class JWTUtil {
 
     public static TokenVO createToken(UserDO user) {
         TokenVO vo = new TokenVO();
-        String token        = JWTUtil.sign(user.getId() + "", user.getUsername() + user.getPassword(), AppUserServiceImpl.Holder.jwtConfig.getExpireTime());
+        String token = JWTUtil.sign(user.getId() + "", user.getUsername() + user.getPassword(), AppUserServiceImpl.Holder.jwtConfig.getExpireTime());
         String refreshToken = JWTUtil.sign(user.getId() + "", user.getUsername() + user.getPassword(), AppUserServiceImpl.Holder.jwtConfig.getRefreshTokenExpire(), true);
         vo.setToken(token);
         vo.setRefleshToken(refreshToken);
@@ -54,6 +60,7 @@ public class JWTUtil {
 
     /**
      * token是否过期
+     *
      * @return true：过期
      */
     public static boolean isTokenExpired(String token) {
@@ -65,35 +72,32 @@ public class JWTUtil {
     /**
      * <pre>
      * </pre>
-     * 
+     *
      * <small> 2018年4月28日 | Aron</small>
-     * 
-     * @param token
-     *            即jwt
-     * @param userId
-     *            用户id
-     * @param secret
-     *            用户的secret
+     *
+     * @param token  即jwt
+     * @param userId 用户id
+     * @param secret 用户的secret
      */
     public static void verify(String token, String userId, String secret) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            JWTVerifier verifier = JWT.require(algorithm).withClaim(userPrimaryKey, userId).build();
+            JWTVerifier verifier = JWT.require(algorithm).withClaim(jwtConfigProperties.getUserPrimaryKey(), userId).build();
             verifier.verify(token);
         } catch (TokenExpiredException exception) {
             log.info("token 签名校验失败,过期：{}", token);
             throw new ExpiredCredentialsException(EnumErrorCode.apiAuthorizationExpired.getMsg());
-        }catch (InvalidClaimException exception2){
+        } catch (InvalidClaimException exception2) {
             log.info("token 签名校验失败,数据异常：{}", token);
             throw new AuthenticationException(EnumErrorCode.apiAuthorizationInvalid.getMsg());
-        }catch (Exception exception3){
+        } catch (Exception exception3) {
             log.info("token 签名校验失败：{}", token);
             throw new IFastApiException(EnumErrorCode.apiAuthorizationInvalid.getCodeStr());
         }
     }
 
     public static void verify(String token, String userId, String secret, boolean isRefreshToken) {
-        if(isRefreshToken){
+        if (isRefreshToken) {
             secret += "_REFRESH_TOKEN";
         }
         verify(token, userId, secret);
@@ -103,18 +107,18 @@ public class JWTUtil {
      * <pre>
      * 获得token中的信息无需secret解密也能获得
      * </pre>
-     * 
+     *
      * <small> 2018年4月28日 | Aron</small>
-     * 
+     *
      * @param token token
      */
     public static String getUserId(String token) {
         try {
             DecodedJWT jwt = JWT.decode(token);
-            Claim claim = jwt.getClaim(userPrimaryKey);
+            Claim claim = jwt.getClaim(jwtConfigProperties.getUserPrimaryKey());
             return claim.asString();
         } catch (JWTDecodeException e) {
-            log.warn("token解码获取{}失败：{}",userPrimaryKey, token);
+            log.warn("token解码获取{}失败：{}", jwtConfigProperties.getUserPrimaryKey(), token);
             return null;
         }
     }
@@ -124,7 +128,7 @@ public class JWTUtil {
      * </pre>
      *
      * <small> 2018年4月28日 | Aron</small>
-     * 
+     *
      * @param userId 用户标识
      * @param secret 加密密钥
      * @param expire 有效期，毫秒值
@@ -133,7 +137,7 @@ public class JWTUtil {
         try {
             Date date = new Date(System.currentTimeMillis() + expire);
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            return JWT.create().withClaim(userPrimaryKey, userId).withExpiresAt(date).sign(algorithm);
+            return JWT.create().withClaim(jwtConfigProperties.getUserPrimaryKey(), userId).withExpiresAt(date).sign(algorithm);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new IFastApiException(EnumErrorCode.apiAuthorizationSignFailed.getCodeStr());
@@ -151,7 +155,7 @@ public class JWTUtil {
      * @param expire 有效期，毫秒值
      */
     public static String sign(String userId, String secret, long expire, boolean isRefreshToken) {
-        if(isRefreshToken){
+        if (isRefreshToken) {
             secret += "_REFRESH_TOKEN";
         }
         return sign(userId, secret, expire);

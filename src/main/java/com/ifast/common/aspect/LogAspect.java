@@ -1,9 +1,11 @@
 package com.ifast.common.aspect;
 
+import com.ifast.api.exception.IFastApiException;
 import com.ifast.common.annotation.Log;
 import com.ifast.common.config.IFastProperties;
 import com.ifast.common.dao.LogDao;
 import com.ifast.common.domain.LogDO;
+import com.ifast.common.type.EnumErrorCode;
 import com.ifast.common.utils.*;
 import com.ifast.sys.domain.UserDO;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * <pre>
@@ -37,32 +40,62 @@ public class LogAspect {
     private final LogDao logMapper;
     private final IFastProperties iFastProperties;
 
-    @Pointcut("execution(public * com.ifast.*.controller.*.*(..))")
-    public void logController(){}
-    
+
+    @Pointcut("execution(public * com.ifast..*.controller.*.*(..))")
+    public void logController() {}
+
     /**
      * 记录controller日志，包括请求、ip、参数、响应结果
      */
     @Around("logController()")
-    public Object controller(ProceedingJoinPoint point) {
+    public Object controller(ProceedingJoinPoint point) throws Throwable {
 
         long beginTime = System.currentTimeMillis();
-        Object result = null;
+        long time = 0L;
+        Object result;
         try {
             result = point.proceed();
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
-        long time = System.currentTimeMillis() - beginTime;
+            time = System.currentTimeMillis() - beginTime;
+        }catch (Exception e){
 
-        print(point, result, time, iFastProperties.isLogPretty());
-        saveLog(point, time);
+            if(e instanceof IllegalArgumentException){
+                result = Result.build(EnumErrorCode.illegalArgument.getCode(), e.getMessage());
+            }else if(e instanceof IFastApiException){
+                log.info("已知异常：{}, 继续抛出",e.getClass());
+                result = Result.buildByErrorCode(e.getMessage());
+            }else {
+                log.info("未知异常：{}, 继续抛出",e.getClass());
+                result = Result.build(EnumErrorCode.unknowFail.getCode(), EnumErrorCode.unknowFail.getMsg());
+            }
+
+            try {
+                print(point, result, time, iFastProperties.isLogPretty());
+                saveLog(point, time);
+            } catch (Exception e1) {
+                log.warn("日志输出|保存错误: {}", e1.getMessage());
+            }
+
+            throw e;
+
+        }
+        try {
+            print(point, result, time, iFastProperties.isLogPretty());
+            saveLog(point, time);
+        } catch (Exception e) {
+            log.warn("日志输出|保存错误: {}", e.getMessage());
+        }
 
         return result;
     }
 
     /**
      * 日志打印
+     *
+     * 注意：
+     * 1. 被外层拦截器拦截将不会记录
+     * 2. 有些特殊情况下打印的日志与实际返回不相同，可参考全局异常处理
+     * 3. 用于常规请求的日志打印，方便调试
+     *
      * @param point
      * @param result
      * @param time
@@ -70,16 +103,23 @@ public class LogAspect {
      */
     private void print(ProceedingJoinPoint point, Object result, long time, boolean isLogPretty) {
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        if(isLogPretty){
-            log.info("User request info  ---- {} ---- S", DateUtils.format(new Date(),DateUtils.DATE_TIME_PATTERN_19));
-            log.info("请求接口: {} {}@{} {} {}.{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName());
+        UserDO sysUser = ShiroUtils.getSysUser();
+        if(Objects.isNull(sysUser)){
+            sysUser = new UserDO();
+        }
+        Long userId = sysUser.getId();
+        String username = sysUser.getUsername();
+
+        if (isLogPretty) {
+            log.info("User request info  ---- {} ---- S", DateUtils.format(new Date(), DateUtils.DATE_TIME_PATTERN_19));
+            log.info("请求接口: {} {}@{} {} {}.{}", request.getMethod(), request.getRequestURI(), userId, IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName());
             log.info("请求参数:{}", JSONUtils.beanToJson(point.getArgs()));
             log.info("请求耗时:{} ms", time);
-            log.info("请求用户:{} ", ShiroUtils.getUserId());
+            log.info("请求用户:{} [{}]", userId, username);
             log.info("请求结果:{}", JSONUtils.beanToJson(result));
-            log.info("------------------------------------------------ E", DateUtils.format(new Date(),DateUtils.DATE_TIME_PATTERN_19));
+            log.info("------------------------------------------------ E", DateUtils.format(new Date(), DateUtils.DATE_TIME_PATTERN_19));
         } else {
-            log.info("【请求】：{} {}@{} {} {}.{}{} (耗时 {} ms) 【返回】：{}", request.getMethod(), request.getRequestURI(), ShiroUtils.getUserId(), IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), JSONUtils.beanToJson(point.getArgs()), time, JSONUtils.beanToJson(result));
+            log.info("【请求】：{} {}@{}[{}] {} {}.{}{} (耗时 {} ms) 【返回】：{}", request.getMethod(), request.getRequestURI(), userId, username, IPUtils.getIpAddr(request), point.getTarget().getClass().getSimpleName(), point.getSignature().getName(), JSONUtils.beanToJson(point.getArgs()), time, JSONUtils.beanToJson(result));
         }
     }
 
@@ -88,6 +128,7 @@ public class LogAspect {
      * 保存日志
      * </pre>
      * <small> 2018年3月22日 | Aron</small>
+     *
      * @param joinPoint
      * @param time
      */
@@ -105,31 +146,31 @@ public class LogAspect {
         String methodName = signature.getName();
         String params;
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        if(request != null) {
-        	sysLog.setMethod(request.getMethod()+" "+request.getRequestURI());
-        	Map<String, String[]> parameterMap = request.getParameterMap();
-        	params = JSONUtils.beanToJson(parameterMap);
-        	// 设置IP地址
-        	sysLog.setIp(IPUtils.getIpAddr(request));
-        }else {
-        	sysLog.setMethod(className + "." + methodName + "()");
-        	Object[] args = joinPoint.getArgs();
-        	params = JSONUtils.beanToJson(args);
+        if (request != null) {
+            sysLog.setMethod(request.getMethod() + " " + request.getRequestURI());
+            Map<String, String[]> parameterMap = request.getParameterMap();
+            params = JSONUtils.beanToJson(parameterMap);
+            // 设置IP地址
+            sysLog.setIp(IPUtils.getIpAddr(request));
+        } else {
+            sysLog.setMethod(className + "." + methodName + "()");
+            Object[] args = joinPoint.getArgs();
+            params = JSONUtils.beanToJson(args);
         }
         int maxLength = 4999;
-        if(params.length() > maxLength){
-        	params = params.substring(0, maxLength);
+        if (params.length() > maxLength) {
+            params = params.substring(0, maxLength);
         }
         sysLog.setParams(params);
         // 用户名
-    	UserDO currUser = ShiroUtils.getSysUser();
-    	if (null == currUser) {
-    		sysLog.setUserId(-1L);
-    		sysLog.setUsername("");
-    	} else {
-    		sysLog.setUserId(currUser.getId());
-    		sysLog.setUsername(currUser.getUsername());
-    	}
+        UserDO currUser = ShiroUtils.getSysUser();
+        if (null == currUser) {
+            sysLog.setUserId(-1L);
+            sysLog.setUsername("");
+        } else {
+            sysLog.setUserId(currUser.getId());
+            sysLog.setUsername(currUser.getUsername());
+        }
         sysLog.setTime((int) time);
         // 系统当前时间
         Date date = new Date();
