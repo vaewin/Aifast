@@ -11,11 +11,11 @@ import java.util.UUID;
 public abstract class UUIDUtils {
 
     public static String get(boolean isPureStr) {
-        String sesult = UUID.randomUUID().toString();
+        String result = UUID.randomUUID().toString();
         if (isPureStr) {
-            sesult = sesult.replaceAll("-", "");
+            result = result.replaceAll("-", "");
         }
-        return sesult;
+        return result;
     }
 
     public static String get() {

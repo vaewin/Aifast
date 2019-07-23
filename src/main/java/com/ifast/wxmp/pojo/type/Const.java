@@ -32,7 +32,7 @@ public class Const {
         /**
          * 服务号
          */
-        public final static Integer SERIVCE = 2;
+        public final static Integer SERVICE = 2;
         /**
          * 企业号
          */

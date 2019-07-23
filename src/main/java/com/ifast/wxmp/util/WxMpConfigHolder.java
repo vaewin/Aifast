@@ -48,7 +48,7 @@ public class WxMpConfigHolder implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         mpConfigService.selectList(
-                new EntityWrapper<>(MpConfigDO.builder().appType(Const.appType.SERIVCE).build()))
+                new EntityWrapper<>(MpConfigDO.builder().appType(Const.appType.SERVICE).build()))
                 .forEach(bean -> {
                     WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
                     // 设置微信公众号的appid

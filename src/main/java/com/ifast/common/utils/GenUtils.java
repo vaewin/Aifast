@@ -180,7 +180,7 @@ public class GenUtils {
      */
     public static String tableToJava(String tableName, String tablePrefix, String autoRemovePre) {
 
-        if (Constant.Generator.AUTO_REOMVE_PRE.equals(autoRemovePre)) {
+        if (Constant.Generator.AUTO_REMOVE_PRE.equals(autoRemovePre)) {
             tableName = tableName.substring(tableName.indexOf(STR_DELIMITER) + 1);
         }
         if (StringUtils.isNotBlank(tablePrefix)) {
