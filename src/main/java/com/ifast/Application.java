@@ -47,5 +47,8 @@ public class Application {
 		log.info("数据库：{}", dataSourceProperties.getUrl());
 		log.info("==================> run at http://localhost:{}  <==================", serverProperties.getPort() + serverProperties.getContextPath());
 	}
-	
+
+	private static void add(){
+		System.out.println("新增添加方法");
+	}
 }
